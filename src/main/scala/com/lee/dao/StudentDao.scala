@@ -5,7 +5,7 @@ import org.springframework.data.mongodb.core.query.{Criteria, Query}
 
 import scala.jdk.CollectionConverters._
 
-class StudentDao() {
+class StudentDao {
   private val stuClass = classOf[Student]
 
   def getAllStudent: List[Student] = mongodbTemplate
@@ -18,8 +18,12 @@ class StudentDao() {
     mongodbTemplate.findOne(query, stuClass, "student")
   }
 
-  def authStudent(userInfo: LoginStudent): Student = {
-    val query = Query.query(Criteria.where("stuId").is(userInfo.stuId).and("pwd").is(userInfo.pwd))
+  def authStudent(stuInfo: LoginStudent): Student = {
+    val query = Query.query(Criteria.where("stuId").is(stuInfo.stuId).and("pwd").is(stuInfo.pwd))
     mongodbTemplate.findOne(query, stuClass, "student")
   }
+}
+
+object StudentDao {
+  def apply(): StudentDao = new StudentDao
 }
