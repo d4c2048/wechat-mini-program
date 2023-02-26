@@ -13,11 +13,12 @@ final case class LoginStudent(stuId: Long, pwd: String) extends Entity
  * @param vtId 志愿者Id
  * @param status 委托状态；
  *               -1：已取消
- *               0：已送达；
- *               1：已被承接，但未还未送达
- *               2：未承接
- *               3：超一天未承接
- *               4：超三天未承接
+ *               0：已确认收货
+ *               1：已送达
+ *               2：已被承接，但未还未送达
+ *               3：未承接
+ *               4：超一天未承接
+ *               5：超三天未承接
  * @param address 目的地
  * @param date 委托建立时间，格式为{yyyy-MM-dd HH:mm:ss}
  * @param remarks 委托备注

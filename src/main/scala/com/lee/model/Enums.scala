@@ -42,12 +42,14 @@ object Role {
 
 /**
  * 委托状态枚举，
- * 枚举值:-1 -> 已撤销
- *       0 -> 已完成
- *       1 -> 已承接
- *       2 -> 未承接
- *       3 -> 超一天未被承接
- *       4 -> 超三天未被承接
+ * 枚举值:<br>
+ * -1 -> 已撤销<br>
+ * 0 -> 已送达<br>
+ * 1 -> 已完成<br>
+ * 2 -> 已承接<br>
+ * 3 -> 未承接<br>
+ * 4 -> 超一天未被承接<br>
+ * 5 -> 超三天未被承接
  */
 sealed trait OrderStatus {
   def code: Int
@@ -58,23 +60,27 @@ object OrderStatus {
     override val code = -1
   }
 
-  object DELIVERED extends OrderStatus {
+  object CONFIRM_RECEIPT extends OrderStatus {
     override val code = 0
   }
 
-  object RECEIVED extends OrderStatus {
+  object DELIVERED extends OrderStatus {
     override val code = 1
   }
 
-  object NO_CLAIMED extends OrderStatus {
+  object RECEIVED extends OrderStatus {
     override val code = 2
   }
 
-  object OVER_ONE_DAY extends OrderStatus {
+  object NO_CLAIMED extends OrderStatus {
     override val code = 3
   }
 
-  object OVER_THREE_DAYS extends OrderStatus {
+  object OVER_ONE_DAY extends OrderStatus {
     override val code = 4
+  }
+
+  object OVER_THREE_DAYS extends OrderStatus {
+    override val code = 5
   }
 }
