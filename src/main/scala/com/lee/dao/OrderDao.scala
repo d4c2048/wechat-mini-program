@@ -2,7 +2,7 @@ package com.lee.dao
 
 import cn.hutool.core.util.ObjectUtil
 import com.lee.model.{Order, OrderStatus}
-import org.springframework.data.mongodb.core.query.{Criteria, Query, Update, UpdateDefinition}
+import org.springframework.data.mongodb.core.query._
 
 import scala.jdk.CollectionConverters._
 
@@ -20,6 +20,18 @@ class OrderDao {
     mongodbTemplate.findOne(query, odrClass, odrCltName)
   }
 
+  def getAllCheckOrder: List[Order] = {
+    val criteria = Array(
+      Criteria.where("status").is(OrderStatus.NO_CLAIMED.code),
+      Criteria.where("status").is(OrderStatus.OVER_ONE_DAY.code)
+    )
+    val query = Query.query(new Criteria().orOperator(criteria: _*))
+    mongodbTemplate
+      .find(query, odrClass, odrCltName)
+      .asScala
+      .toList
+  }
+
   def addOrder(order: Order): Boolean = {
     val res = mongodbTemplate.insert(order, odrCltName)
     ObjectUtil.isNotNull(res)
@@ -27,16 +39,13 @@ class OrderDao {
 
   def updateById(odrId: String, props: Map[String, Any]): Boolean = {
     val query = Query.query(Criteria.where(odrIdColName).is(odrId))
-    var res = true
+    val update = new Update
     props
       .filter(en => odrFields.contains(en._1))
-      .foreach(en => {
-        val (key, value) = en
-        val update = Update.update(key, value)
-        val updateResult = mongodbTemplate.updateFirst(query, update, odrClass, odrCltName)
-        res = res && updateResult.getModifiedCount > 0
-      })
-    res
+      .foreach(en => update.set(en._1, en._2))
+    mongodbTemplate
+      .updateFirst(query, update, odrClass, odrCltName)
+      .getModifiedCount > 1
   }
 
   def updateOrderStatusById(odrId: String, status: OrderStatus): Boolean = {

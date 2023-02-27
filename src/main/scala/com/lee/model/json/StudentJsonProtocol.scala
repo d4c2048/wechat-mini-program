@@ -5,6 +5,6 @@ import spray.json.DefaultJsonProtocol
 
 trait StudentJsonProtocol extends DefaultJsonProtocol {
   implicit val loginStudentJsonProtocol = jsonFormat2(LoginStudent)
-  implicit val studentJsonProtocol = jsonFormat5(Student)
+  implicit val studentJsonProtocol = jsonFormat6(Student)
   implicit val oderJsonProtocol = jsonFormat7(Order)
 }

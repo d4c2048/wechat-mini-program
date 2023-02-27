@@ -6,10 +6,10 @@ import org.springframework.data.mongodb.core.{MongoTemplate, SimpleMongoClientDa
 
 import scala.jdk.CollectionConverters._
 
-case class User(user_id: String, user_name: String, age: Int, adress: String)
+case class User(user_id: String, user_name: String, var age: Int, address: String)
 
 object MainTest {
   def main(args: Array[String]): Unit = {
-    classOf[Order].getDeclaredFields.map(_.getName).foreach(println)
+
   }
 }

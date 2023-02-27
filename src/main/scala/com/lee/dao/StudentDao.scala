@@ -1,5 +1,6 @@
 package com.lee.dao
 
+import cn.hutool.core.util.ObjectUtil
 import com.lee.model.{LoginStudent, Role, Student, StudentStatus}
 import org.springframework.data.mongodb.core.query.{Criteria, Query, Update}
 
@@ -27,16 +28,13 @@ class StudentDao {
 
   def updateById(stuId: Long, props: Map[String, Any]): Boolean = {
     val query = Query.query(Criteria.where(stuIdColName).is(stuId))
-    var res = true
+    val update = new Update
     props
       .filter(en => stuFields.contains(en._1))
-      .foreach(en => {
-        val (key, value) = en
-        val update = Update.update(key, value)
-        val updateResult = mongodbTemplate.updateFirst(query, update, stuClass, stuCltName)
-        res = updateResult.getModifiedCount > 1 && res
-      })
-    res
+      .foreach(en => update.set(en._1, en._2))
+    mongodbTemplate
+      .updateFirst(query, update, stuClass, stuCltName)
+      .getModifiedCount > 1
   }
 
   def updateStatusById(stuId: Long, status: StudentStatus): Boolean = {
@@ -49,6 +47,12 @@ class StudentDao {
 
   def updatePwdById(stuId: Long, newPwd: String): Boolean = {
     updateById(stuId, Map(pwdColName -> newPwd))
+  }
+
+  def addStudent(stu: Student): Boolean = {
+    if (ObjectUtil.isNull(getStudentById(stu.stuId))) return false
+    mongodbTemplate.insert(stu, stuCltName)
+    ObjectUtil.isNotNull(getStudentById(stu.stuId))
   }
 }
 

@@ -9,6 +9,8 @@ object Guardian {
   def apply(): Behavior[Nothing] = {
     Behaviors.setup[Nothing](ctx => {
       implicit val system = ctx.system
+      val config = system.settings.config
+      key = config.getString("jwt.key")
       val stuActorBehavior = Behaviors
         .supervise(StudentActor())
         .onFailure(SupervisorStrategy.restart)

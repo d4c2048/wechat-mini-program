@@ -1,7 +1,8 @@
 package com.lee
 
-import com.lee.dao.StudentDao
+import com.lee.dao.{OrderDao, StudentDao}
 
 package object service {
-  private[service] val stuDao = StudentDao()
+  private[service] lazy val stuDao = StudentDao()
+  private[service] lazy val odrDao = OrderDao()
 }
