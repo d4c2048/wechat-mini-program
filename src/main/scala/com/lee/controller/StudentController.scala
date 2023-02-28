@@ -18,17 +18,17 @@ import scala.concurrent.duration.DurationInt
 import scala.language.postfixOps
 import scala.util.{Failure, Success}
 
-class StudentController(studentActor: ActorRef[StudentCommand])(implicit system: ActorSystem[_])
+class StudentController(stuActor: ActorRef[StudentCommand])(implicit system: ActorSystem[_])
                                                                extends JacksonSupport
-                                                                 with StudentJsonProtocol
-                                                                 with AuthDirective {
+                                                               with StudentJsonProtocol
+                                                               with AuthDirective {
   private implicit val scheduler = system.scheduler
 
   def route: Route = {
     pathPrefix("student") {
       (path("login") & post & entity(as[LoginStudent]))(loginInfo => {
         implicit val timeout = Timeout(3 seconds)
-        val askFuture = studentActor ? (replyTo => VerifyLogin(loginInfo, replyTo))
+        val askFuture = stuActor ? (replyTo => VerifyLogin(loginInfo, replyTo))
         onComplete(askFuture) {
           case Success(student) =>
             if (ObjectUtil.isNull(student)) complete(FailureResponse("请检查用户名和密码。"))
@@ -36,7 +36,10 @@ class StudentController(studentActor: ActorRef[StudentCommand])(implicit system:
           case Failure(_) => complete(FailureResponse("服务器错误：500 error."))
         }
       }) ~
-      auth(stu => {
+      auth(stuJson => {
+        val stu = stuJson
+          .parseJson
+          .convertTo[Student]
         path("secure") {
             complete(SuccessResponse(res = stu.secure.toJson.compactPrint))
         } ~
@@ -44,7 +47,16 @@ class StudentController(studentActor: ActorRef[StudentCommand])(implicit system:
           complete(if (answer == stu.secure) SuccessResponse() else FailureResponse())
         }) ~
         (path("pwd") & put & entity(as[String]))(pwd => {
-          complete("")
+          implicit val timeout = Timeout(3 seconds)
+          val future = stuActor ? (replyTo => UpdatePwd(stu.stuId, pwd, replyTo))
+          onComplete(future) {
+            case Success(value) if value =>
+              complete(SuccessResponse("更新成功"))
+            case Success(value) if !value =>
+              complete(FailureResponse("更新失败"))
+            case Failure(_) =>
+              complete(FailureResponse("服务器错误：500"))
+          }
         })
       })
     }

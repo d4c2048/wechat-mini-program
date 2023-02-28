@@ -5,8 +5,9 @@ import akka.actor.typed.scaladsl.AskPattern.Askable
 import akka.actor.typed.scaladsl.Behaviors
 import akka.util.Timeout
 import cn.hutool.core.util.ObjectUtil
-import com.lee.model.{AddOrder, CheckOrderStatus, FailureResponse, OrderCommand, OrderStatus, Response, SuccessResponse, UpdateOrderStatus}
+import com.lee.model.{AddOrder, CheckOrderStatus, FailureResponse, GetAllNoClaimOrder, OrderCommand, OrderStatus, Response, SuccessResponse, UpdateOrderStatus}
 import com.lee.util.DateUtil
+import spray.json._
 
 import scala.concurrent.Future
 import scala.concurrent.duration.DurationInt
@@ -24,6 +25,7 @@ object OrderActor {
       Behaviors.withTimers(timer => {
         timer.startTimerAtFixedRate(CheckOrderStatus, CheckOrderStatus, 1 minute)
         Behaviors.receiveMessagePartial {
+
           case CheckOrderStatus =>
             odrDao
               .getAllCheckOrder
@@ -39,8 +41,10 @@ object OrderActor {
                   future.onComplete {
                     case Failure(exception) =>
                       log.error(s"Update order(id: ${odr.odrId}) status FAILED with a EXCEPTION: ${exception.getMessage}")
-                    case Success(value) if !value => log.warn(s"Update order(id: ${odr.odrId}) status FAILED!")
-                    case Success(value) if value => log.debug(s"Update order(id: ${odr.odrId}) status SUCCEED!")
+                    case Success(value) if !value =>
+                      log.warn(s"Update order(id: ${odr.odrId}) status FAILED!")
+                    case Success(value) if value =>
+                      log.debug(s"Update order(id: ${odr.odrId}) status SUCCEED!")
                   }
                 }
               })
@@ -51,8 +55,11 @@ object OrderActor {
             Behaviors.same
 
           case AddOrder(odr, replyTo) =>
-            val res = odrDao.addOrder(odr)
-            replyTo ! (if (res) SuccessResponse("新建委托成功") else FailureResponse("新建委托失败"))
+              replyTo ! odrDao.addOrder(odr)
+            Behaviors.same
+
+          case GetAllNoClaimOrder(replyTo) =>
+            replyTo ! odrDao.getAllNoClaimOrder
             Behaviors.same
         }
       })

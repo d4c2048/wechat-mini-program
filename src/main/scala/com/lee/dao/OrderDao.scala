@@ -1,7 +1,7 @@
 package com.lee.dao
 
 import cn.hutool.core.util.ObjectUtil
-import com.lee.model.{Order, OrderStatus}
+import com.lee.model.{Order, OrderStatus, orderOrdering}
 import org.springframework.data.mongodb.core.query._
 
 import scala.jdk.CollectionConverters._
@@ -10,9 +10,23 @@ class OrderDao {
   import OrderDao._
 
   def getAllOrder: List[Order] = {
-    mongodbTemplate.findAll(odrClass, odrCltName)
+    mongodbTemplate
+      .findAll(odrClass, odrCltName)
       .asScala
       .toList
+  }
+
+  def getAllNoClaimOrder: List[Order] = {
+    val criteria = Criteria
+      .where(statusColName)
+      .gte(OrderStatus.NO_CLAIMED.code)
+      .lte(OrderStatus.OVER_THREE_DAYS.code)
+    val query = Query.query(criteria)
+    mongodbTemplate
+      .find(query, odrClass, odrCltName)
+      .asScala
+      .toList
+      .sorted
   }
 
   def getOrderById(odrId: String): Order = {
