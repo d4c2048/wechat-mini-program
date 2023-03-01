@@ -1,7 +1,8 @@
 package com.lee.util
 
 import java.text.SimpleDateFormat
-import java.util.{Calendar, Date}
+import java.time.LocalTime
+import java.util.{Calendar, Date, Locale, TimeZone}
 import scala.annotation.tailrec
 
 object DateUtil {
@@ -45,4 +46,39 @@ object DateUtil {
     val formatter = new SimpleDateFormat
     formatter.parse(source)
   }
+
+  def diffHour(hour: Int = 0, min: Int = 0, sec: Int = 0, nano: Int = 0) = {
+    val time = LocalTime.of(hour, min, sec, nano).toNanoOfDay
+    val now = LocalTime.now().toNanoOfDay
+    val fullDay = 24L * 60 * 60 * 1000 * 1000 * 1000
+    val diff = time - now
+    if (diff < 0) fullDay + diff else diff
+  }
+
+  /**
+   * 根据指定格式获取指定地区、指定时区的当前时间
+   *
+   * @param pattern  时间格式
+   * @param locale   地区
+   * @param timeZone 时区
+   * @return 格式化时间
+   */
+  def currentTime(pattern: String, locale: Locale, timeZone: TimeZone): String = {
+    new SimpleDateFormat(pattern).format(Calendar.getInstance(timeZone, locale).getTime)
+  }
+
+  /**
+   * 根据指定格式获取默认地区的当前时间
+   *
+   * @param pattern 时间格式
+   * @return 格式化时间
+   */
+  def currentTime(pattern: String): String = currentTime(pattern, Locale.getDefault, TimeZone.getDefault)
+
+  /**
+   * 获取“yyyy:MM:dd HH:mm:ss”格式的默认地区的当前时间
+   *
+   * @return 格式化时间
+   */
+  def currentTime: String = currentTime("yyyy-MM-dd HH:mm:ss")
 }

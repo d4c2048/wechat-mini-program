@@ -5,16 +5,19 @@ import akka.actor.typed.scaladsl.AskPattern.Askable
 import akka.actor.typed.scaladsl.Behaviors
 import akka.util.Timeout
 import cn.hutool.core.util.ObjectUtil
-import com.lee.model.{AddOrder, CheckOrderStatus, FailureResponse, GetAllNoClaimOrder, OrderCommand, OrderStatus, Response, SuccessResponse, UpdateOrderStatus}
+import com.lee.model._
 import com.lee.util.DateUtil
-import spray.json._
 
+import java.text.DecimalFormat
+import java.util.concurrent.atomic.AtomicInteger
 import scala.concurrent.Future
-import scala.concurrent.duration.DurationInt
+import scala.concurrent.duration.{DurationInt, DurationLong}
 import scala.language.postfixOps
 import scala.util.{Failure, Success}
 
 object OrderActor {
+  private[this] val id = new AtomicInteger(1)
+
   def apply(): Behavior[OrderCommand] = {
     Behaviors.setup(ctx => {
       val self = ctx.self
@@ -24,6 +27,7 @@ object OrderActor {
       implicit val executionContext = ctx.executionContext
       Behaviors.withTimers(timer => {
         timer.startTimerAtFixedRate(CheckOrderStatus, CheckOrderStatus, 1 minute)
+        timer.startTimerAtFixedRate(ResetId, ResetId, DateUtil.diffHour() nanos, 1 day)
         Behaviors.receiveMessagePartial {
 
           case CheckOrderStatus =>
@@ -60,6 +64,14 @@ object OrderActor {
 
           case GetAllNoClaimOrder(replyTo) =>
             replyTo ! odrDao.getAllNoClaimOrder
+            Behaviors.same
+
+          case ResetId =>
+            id.set(1)
+            Behaviors.same
+
+          case SaveOrder(odr, replyTo) =>
+            replyTo ! odrDao.addOrder(odr)
             Behaviors.same
         }
       })

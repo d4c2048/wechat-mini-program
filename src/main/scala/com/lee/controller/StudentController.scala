@@ -7,10 +7,8 @@ import akka.http.scaladsl.server.Route
 import akka.util.Timeout
 import cn.hutool.core.util.ObjectUtil
 import com.lee.controller.directive.AuthDirective
-import com.lee.key
-import com.lee.model.json.StudentJsonProtocol
 import com.lee.model._
-import com.lee.util.JwtUtil
+import com.lee.model.json.EntityJsonProtocol
 import de.heikoseeberger.akkahttpjackson.JacksonSupport
 import spray.json._
 
@@ -20,12 +18,14 @@ import scala.util.{Failure, Success}
 
 class StudentController(stuActor: ActorRef[StudentCommand])(implicit system: ActorSystem[_])
                                                                extends JacksonSupport
-                                                               with StudentJsonProtocol
+                                                               with EntityJsonProtocol
                                                                with AuthDirective {
   private implicit val scheduler = system.scheduler
 
   def route: Route = {
     pathPrefix("student") {
+
+      // 用户登录接口
       (path("login") & post & entity(as[LoginStudent]))(loginInfo => {
         implicit val timeout = Timeout(3 seconds)
         val askFuture = stuActor ? (replyTo => VerifyLogin(loginInfo, replyTo))
@@ -40,12 +40,18 @@ class StudentController(stuActor: ActorRef[StudentCommand])(implicit system: Act
         val stu = stuJson
           .parseJson
           .convertTo[Student]
+
+        // 获取安全问题接口
         path("secure") {
             complete(SuccessResponse(res = stu.secure.toJson.compactPrint))
         } ~
+
+        // 验证安全问题接口
         (path("verify" / "secure") & post & entity(as[Map[String, String]]))(answer => {
           complete(if (answer == stu.secure) SuccessResponse() else FailureResponse())
         }) ~
+
+        // 修改密码接口
         (path("pwd") & put & entity(as[String]))(pwd => {
           implicit val timeout = Timeout(3 seconds)
           val future = stuActor ? (replyTo => UpdatePwd(stu.stuId, pwd, replyTo))
@@ -64,5 +70,8 @@ class StudentController(stuActor: ActorRef[StudentCommand])(implicit system: Act
 }
 
 object StudentController {
-  def apply(studentActor: ActorRef[StudentCommand])(implicit system: ActorSystem[_]): StudentController = new StudentController(studentActor)
+  def apply(studentActor: ActorRef[StudentCommand])
+           (implicit system: ActorSystem[_]): StudentController = {
+    new StudentController(studentActor)
+  }
 }

@@ -20,8 +20,14 @@ sealed trait OrderCommand extends Command
 
 case object CheckOrderStatus extends OrderCommand
 
+case object ResetId extends OrderCommand
+
 final case class UpdateOrderStatus(odrId: String, status: OrderStatus, replyTo: ActorRef[Boolean]) extends OrderCommand
 
 final case class AddOrder(odr: Order, replyTo: ActorRef[Boolean]) extends OrderCommand
 
 final case class GetAllNoClaimOrder(replyTo: ActorRef[List[Order]]) extends OrderCommand
+
+final case class SaveOrder(odr: Order, replyTo: ActorRef[Boolean]) extends OrderCommand
+
+final case class GetOrderById(odrId: String, replyTo: ActorRef[Order]) extends OrderCommand
