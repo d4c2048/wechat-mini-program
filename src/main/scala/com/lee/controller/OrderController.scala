@@ -7,10 +7,9 @@ import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.directives.FileInfo
 import akka.util.Timeout
 import cn.hutool.core.util.ObjectUtil
-import com.lee.controller.OrderController.{getOdrId, renameFile}
 import com.lee.controller.directive.AuthDirective
 import com.lee.model.json.EntityJsonProtocol
-import com.lee.model.{FailureResponse, GetAllNoClaimOrder, GetOrderById, Order, OrderCommand, OrderStatus, SaveOrder, Student, SuccessResponse, UpdateOrderStatus}
+import com.lee.model._
 import com.lee.util.DateUtil
 import spray.json._
 
@@ -24,6 +23,8 @@ import scala.util.{Failure, Success}
 class OrderController(odrActor: ActorRef[OrderCommand])(implicit system: ActorSystem[_])
                                                           extends AuthDirective
                                                           with EntityJsonProtocol {
+  import OrderController._
+
   def route: Route = {
     implicit val scheduler = system.scheduler
     auth(stuJson => {
@@ -44,7 +45,7 @@ class OrderController(odrActor: ActorRef[OrderCommand])(implicit system: ActorSy
                 onComplete(future) {
                   case Success(value) if value =>
                     complete(SuccessResponse("发布成功"))
-                  case Success(value) if !value =>
+                  case Success(value) =>
                     complete(FailureResponse("发布失败"))
                   case Failure(_) =>
                     complete(FailureResponse("服务器错误：500"))
@@ -52,7 +53,21 @@ class OrderController(odrActor: ActorRef[OrderCommand])(implicit system: ActorSy
               })
             })
           } ~
-
+          // 获取用户提交的所有委托
+          get {
+            implicit val timeout = Timeout(3 seconds)
+            val future = odrActor ? (GetStudentOrders(stu.stuId, _))
+            onComplete(future) {
+              case Success(list) if list.isEmpty =>
+                complete(SuccessResponse("您还没有提交委托", 20001))
+              case Success(list) =>
+                complete(SuccessResponse(res = list.toJson.compactPrint))
+              case Failure(_) =>
+                complete(FailureResponse("服务器错误：500"))
+            }
+          }
+        } ~
+        path("v") {
           // 获取还未被承接的所有订单接口
           get {
             implicit val timeout = Timeout(3 seconds)
@@ -81,16 +96,15 @@ class OrderController(odrActor: ActorRef[OrderCommand])(implicit system: ActorSy
                 complete(FailureResponse("服务器错误：500"))
             }
           } ~
-
           // 根据委托Id修改委托状态
           (put & parameter("status".as[Int]))(s => {
             implicit val timeout = Timeout(3 seconds)
             val status = OrderStatus.toStatus(s)
-            val future = odrActor ? (replyTo => UpdateOrderStatus(odrId, status, replyTo))
+            val future = odrActor ? (UpdateOrderStatus(odrId, status, _))
             onComplete(future) {
               case Success(value) if value =>
                 complete(SuccessResponse("修改成功"))
-              case Success(odr) =>
+              case Success(value) =>
                 complete(FailureResponse("修改失败"))
               case Failure(_) =>
                 complete(FailureResponse("服务器错误：500"))
@@ -107,14 +121,14 @@ object OrderController {
 
   def apply(odrActor: ActorRef[OrderCommand])(implicit system: ActorSystem[_]): OrderController = new OrderController(odrActor)
 
-  def getOdrId: String = {
+  private def getOdrId: String = {
     val head = "ORDER"
     val date = DateUtil.currentTime("yyyyMMddHHmm")
     val id = new DecimalFormat("00000").format(this.id.getAndIncrement)
     head + date + id
   }
 
-  def renameFile(newName: String)(fileInfo: FileInfo): File = {
+  private def renameFile(newName: String)(fileInfo: FileInfo): File = {
     val suffix = fileInfo.fileName.substring(fileInfo.fileName.lastIndexOf("."))
     new File(s"$resourcesPath/screen_shot/${newName + suffix}")
   }

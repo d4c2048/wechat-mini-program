@@ -8,7 +8,6 @@ import cn.hutool.core.util.ObjectUtil
 import com.lee.model._
 import com.lee.util.DateUtil
 
-import java.text.DecimalFormat
 import java.util.concurrent.atomic.AtomicInteger
 import scala.concurrent.Future
 import scala.concurrent.duration.{DurationInt, DurationLong}
@@ -47,7 +46,7 @@ object OrderActor {
                       log.error(s"Update order(id: ${odr.odrId}) status FAILED with a EXCEPTION: ${exception.getMessage}")
                     case Success(value) if !value =>
                       log.warn(s"Update order(id: ${odr.odrId}) status FAILED!")
-                    case Success(value) if value =>
+                    case Success(_) =>
                       log.debug(s"Update order(id: ${odr.odrId}) status SUCCEED!")
                   }
                 }
@@ -72,6 +71,14 @@ object OrderActor {
 
           case SaveOrder(odr, replyTo) =>
             replyTo ! odrDao.addOrder(odr)
+            Behaviors.same
+
+          case GetOrderById(odrId, replyTo) =>
+            replyTo ! odrDao.getOrderById(odrId)
+            Behaviors.same
+
+          case GetStudentOrders(stuId, replyTo) =>
+            replyTo ! odrDao.getAllOrderByStuId(stuId)
             Behaviors.same
         }
       })

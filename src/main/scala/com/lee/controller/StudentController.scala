@@ -45,12 +45,10 @@ class StudentController(stuActor: ActorRef[StudentCommand])(implicit system: Act
         path("secure") {
             complete(SuccessResponse(res = stu.secure.toJson.compactPrint))
         } ~
-
         // 验证安全问题接口
         (path("verify" / "secure") & post & entity(as[Map[String, String]]))(answer => {
           complete(if (answer == stu.secure) SuccessResponse() else FailureResponse())
         }) ~
-
         // 修改密码接口
         (path("pwd") & put & entity(as[String]))(pwd => {
           implicit val timeout = Timeout(3 seconds)

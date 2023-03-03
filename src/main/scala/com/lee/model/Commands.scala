@@ -31,3 +31,5 @@ final case class GetAllNoClaimOrder(replyTo: ActorRef[List[Order]]) extends Orde
 final case class SaveOrder(odr: Order, replyTo: ActorRef[Boolean]) extends OrderCommand
 
 final case class GetOrderById(odrId: String, replyTo: ActorRef[Order]) extends OrderCommand
+
+final case class GetStudentOrders(stuId: Long, replyTo: ActorRef[List[Order]]) extends OrderCommand

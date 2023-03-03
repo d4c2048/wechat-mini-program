@@ -9,11 +9,13 @@ import scala.jdk.CollectionConverters._
 class OrderDao {
   import OrderDao._
 
-  def getAllOrder: List[Order] = {
+  def getAllOrderByStuId(stuId: Long): List[Order] = {
+    val query = Query.query(Criteria.where("stuId").is(stuId))
     mongodbTemplate
-      .findAll(odrClass, odrCltName)
+      .find(query, odrClass, odrCltName)
       .asScala
       .toList
+      .sorted
   }
 
   def getAllNoClaimOrder: List[Order] = {

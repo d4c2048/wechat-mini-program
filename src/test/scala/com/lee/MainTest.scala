@@ -9,12 +9,13 @@ import scala.jdk.CollectionConverters._
 case class User(user_id: String, user_name: String, var age: Int, address: String)
 
 object MainTest {
-  def partialFunc(num: Int): String = {
+  def partialFunc(num: Int): String = num match {
     case 0 => "零"
     case 1 => "一"
+    case _ => " "
   }
 
   def main(args: Array[String]): Unit = {
-    println(partialFunc(0))
+    println(partialFunc(120))
   }
 }
