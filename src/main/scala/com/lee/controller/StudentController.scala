@@ -21,19 +21,33 @@ class StudentController(stuActor: ActorRef[StudentCommand])(implicit system: Act
                                                                with EntityJsonProtocol
                                                                with AuthDirective {
   private implicit val scheduler = system.scheduler
+  private val log = system.log
 
   def route: Route = {
     pathPrefix("student") {
-
+      // 用户注册接口
+      (path("registry") & post & entity(as[Student]))(stu => {
+        implicit val timeout = Timeout(3 seconds)
+        val future = stuActor ? (AddStudent(stu, _))
+        onComplete(future) {
+          case Success(value) if value => complete(SuccessResponse("注册成功"))
+          case Success(_) => complete(FailureResponse("注册失败"))
+          case Failure(e) =>
+            log.error(e.getMessage)
+            complete(FailureResponse("服务器错误：500 error."))
+        }
+      }) ~
       // 用户登录接口
       (path("login") & post & entity(as[LoginStudent]))(loginInfo => {
         implicit val timeout = Timeout(3 seconds)
         val askFuture = stuActor ? (replyTo => VerifyLogin(loginInfo, replyTo))
         onComplete(askFuture) {
-          case Success(student) =>
-            if (ObjectUtil.isNull(student)) complete(FailureResponse("请检查用户名和密码。"))
-            else complete(SuccessResponse(res = student.toJson.compactPrint))
-          case Failure(_) => complete(FailureResponse("服务器错误：500 error."))
+          case Success(token) =>
+            if (ObjectUtil.equal(token, "")) complete(FailureResponse("请检查用户名和密码。"))
+            else complete(SuccessResponse(res = token))
+          case Failure(e) =>
+            log.error(e.getMessage)
+            complete(FailureResponse("服务器错误：500 error."))
         }
       }) ~
       auth(stuJson => {
@@ -47,7 +61,7 @@ class StudentController(stuActor: ActorRef[StudentCommand])(implicit system: Act
         } ~
         // 验证安全问题接口
         (path("verify" / "secure") & post & entity(as[Map[String, String]]))(answer => {
-          complete(if (answer == stu.secure) SuccessResponse() else FailureResponse())
+          complete(if (answer == stu.secure.parseJson.convertTo[Map[String, String]]) SuccessResponse() else FailureResponse())
         }) ~
         // 修改密码接口
         (path("pwd") & put & entity(as[String]))(pwd => {

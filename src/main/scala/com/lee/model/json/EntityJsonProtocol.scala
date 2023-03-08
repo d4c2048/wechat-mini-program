@@ -1,7 +1,7 @@
 package com.lee.model.json
 
 import com.lee.model.{LoginStudent, Order, Student}
-import spray.json.DefaultJsonProtocol
+import spray.json._
 
 trait EntityJsonProtocol extends DefaultJsonProtocol {
   implicit val loginStudentJsonProtocol = jsonFormat2(LoginStudent)

@@ -6,7 +6,7 @@ sealed trait Command extends Model
 
 sealed trait StudentCommand extends Command
 
-final case class VerifyLogin(stuInfo: LoginStudent, replyTo: ActorRef[Student]) extends StudentCommand
+final case class VerifyLogin(stuInfo: LoginStudent, replyTo: ActorRef[String]) extends StudentCommand
 
 final case class AddStudent(stu: Student, replyTo: ActorRef[Boolean]) extends StudentCommand
 

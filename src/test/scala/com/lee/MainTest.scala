@@ -9,13 +9,9 @@ import scala.jdk.CollectionConverters._
 case class User(user_id: String, user_name: String, var age: Int, address: String)
 
 object MainTest {
-  def partialFunc(num: Int): String = num match {
-    case 0 => "零"
-    case 1 => "一"
-    case _ => " "
-  }
+  val mongodbTemplate = new MongoTemplate(new SimpleMongoClientDatabaseFactory("mongodb://localhost:27017/test_db"))
 
   def main(args: Array[String]): Unit = {
-    println(partialFunc(120))
+    //mongodbTemplate.findOne()
   }
 }

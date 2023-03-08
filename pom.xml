@@ -9,8 +9,8 @@
     <version>1.0-SNAPSHOT</version>
 
     <properties>
-        <maven.compiler.source>8</maven.compiler.source>
-        <maven.compiler.target>8</maven.compiler.target>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <scala.version>2.13.10</scala.version>
         <scala.compact.version>2.13</scala.compact.version>
@@ -88,18 +88,47 @@
         <dependency>
             <groupId>org.springframework.data</groupId>
             <artifactId>spring-data-mongodb</artifactId>
-            <version>3.4.1</version>
+            <version>4.0.3</version>
         </dependency>
-        <dependency>
+        <!--<dependency>
             <groupId>org.mongodb</groupId>
             <artifactId>mongo-java-driver</artifactId>
             <version>3.12.12</version>
         </dependency>
         <dependency>
             <groupId>org.mongodb</groupId>
+            <artifactId>mongodb-driver</artifactId>
+            <version>3.12.12</version>
+        </dependency>-->
+        <dependency>
+            <groupId>org.mongodb</groupId>
             <artifactId>mongodb-driver-core</artifactId>
             <version>4.9.0</version>
         </dependency>
+        <dependency>
+            <groupId>org.mongodb</groupId>
+            <artifactId>bson</artifactId>
+            <version>4.9.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.mongodb</groupId>
+            <artifactId>mongodb-driver-sync</artifactId>
+            <version>4.9.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.mongodb</groupId>
+            <artifactId>mongodb-driver-reactivestreams</artifactId>
+            <version>4.9.0</version>
+        </dependency>
+
+
+
+
+        <!--        <dependency>-->
+<!--            <groupId>org.mongodb</groupId>-->
+<!--            <artifactId>mongodb-driver-core</artifactId>-->
+<!--            <version>4.9.0</version>-->
+<!--        </dependency>-->
 
         <dependency>
             <groupId>com.auth0</groupId>

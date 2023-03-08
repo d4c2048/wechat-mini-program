@@ -23,7 +23,12 @@ class StudentDao {
 
   def authStudent(stuInfo: LoginStudent): Student = {
     val query = Query.query(Criteria.where(stuIdColName).is(stuInfo.stuId).and(pwdColName).is(stuInfo.pwd))
-    mongodbTemplate.findOne(query, stuClass, stuCltName)
+    val student = mongodbTemplate.findOne(query, stuClass, stuCltName)
+    if (ObjectUtil.isNull(student)) {
+      return Student(0, null, 0, null, 0, null)
+    }
+    student.status = StudentStatus.ONLINE.code
+    student
   }
 
   def updateById(stuId: Long, props: Map[String, Any]): Boolean = {
@@ -50,8 +55,9 @@ class StudentDao {
   }
 
   def addStudent(stu: Student): Boolean = {
-    if (ObjectUtil.isNull(getStudentById(stu.stuId))) return false
+    if (ObjectUtil.isNotNull(getStudentById(stu.stuId))) return false
     mongodbTemplate.insert(stu, stuCltName)
+    mongodbTemplate.insert()
     ObjectUtil.isNotNull(getStudentById(stu.stuId))
   }
 }
